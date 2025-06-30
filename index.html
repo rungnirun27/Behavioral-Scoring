@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตัดคะแนนความประพฤติ โรงเรียนหนองสำโรงวิทยา ปี 2568</title>
+    <!-- Google Fonts for modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #ff4500; /* orangered */
+            --secondary-color: #e67e22; /* orange */
+            --dark-color: #2c3e50;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --edit-color: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', Arial, sans-serif;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        #configBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #configBtn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .stats-section {
+            background: var(--light-gray);
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+        }
+
+        h2, h3 {
+            color: var(--dark-color);
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        .violation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .violation-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .violation-btn:hover {
+            background: #fee;
+            border-color: var(--primary-color);
+        }
+
+        .violation-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        .submit-btn.edit {
+             background: linear-gradient(45deg, var(--edit-color), #2980b9);
+        }
+        .submit-btn.edit:hover {
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ecf0f1;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .records-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ecf0f1;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .records-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .records-table th {
+            background: var(--dark-color);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .records-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .record-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .record-action-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            flex-grow: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .manage-students-btn { background: #8e44ad; }
+        .export-excel-btn { background: #27ae60; }
+        .import-excel-btn { background: var(--success-color); }
+
+        .top-students-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #ecf0f1;
+            margin-top: 10px;
+        }
+
+        #topStudentsList {
+            list-style-position: inside;
+            padding-left: 5px;
+        }
+
+        #topStudentsList li {
+            padding: 8px 5px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+        }
+
+        #topStudentsList li:last-child {
+            border-bottom: none;
+        }
+
+        #topStudentsList .student-name {
+            flex-grow: 1;
+            margin-left: 10px;
+        }
+
+        #topStudentsList .student-points {
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+
+        /* Modal Styles */
+        .modal-overlay, .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.visible, .loader-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Student Manager Styles */
+        #studentManagerList { list-style: none; padding: 0; margin-top: 20px; }
+        #studentManagerList li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .student-manager-actions button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        .student-edit-btn { background: var(--edit-color); }
+        .student-delete-btn { background: var(--danger-color); }
+
+        /* Toast Notification & Loader Styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -20px);
+        }
+        .toast.success { background-color: var(--success-color); }
+        .toast.error { background-color: var(--danger-color); }
+        
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid var(--primary-color);
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #otherViolationDetails {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        @media (max-width: 992px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .violation-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ ระบบตัดคะแนนความประพฤติ โรงเรียนหนองสำโรงวิทยา ปี 2568</h1>
+            <p>เชื่อมต่อกับ Google Sheets</p>
+            <button id="configBtn" title="ตั้งค่า Script URL">⚙️</button>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>📝 บันทึกการตัดคะแนน</h2>
+                <form id="deductForm">
+                    <div class="form-group">
+                        <label for="studentSelect">เลือกนักเรียน:</label>
+                        <select id="studentSelect" required>
+                            <option value="">-- กรุณาตั้งค่า Script URL --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateInput">วันที่:</label>
+                        <input type="date" id="dateInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ประเภทความผิด:</label>
+                        <div class="violation-grid">
+                            <button type="button" class="violation-btn" data-violation="late" data-points="5">มาสาย (5)</button>
+                            <button type="button" class="violation-btn" data-violation="uniform" data-points="10">แต่งกายผิด (10)</button>
+                            <button type="button" class="violation-btn" data-violation="hairstyle" data-points="10">ทรงผมผิด (10)</button>
+                            <button type="button" class="violation-btn" data-violation="homework" data-points="10">ไม่ส่งงาน (10)</button>
+                            <button type="button" class="violation-btn" data-violation="skipping" data-points="20">หนีเรียน (20)</button>
+                            <button type="button" class="violation-btn" data-violation="phone" data-points="15">ใช้โทรศัพท์ (15)</button>
+                            <button type="button" class="violation-btn" data-violation="fighting" data-points="50">ทะเลาะวิวาท (50)</button>
+                            <button type="button" class="violation-btn" id="otherViolationBtn">อื่นๆ (ระบุเอง)</button>
+                        </div>
+                        <div id="otherViolationDetails">
+                            <div class="form-group">
+                                <label for="otherViolationNameInput">ระบุชื่อความผิด:</label>
+                                <input type="text" id="otherViolationNameInput">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="otherViolationPointsInput">ระบุคะแนน:</label>
+                                <input type="number" id="otherViolationPointsInput" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">รายละเอียด:</label>
+                        <textarea id="description" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointsToDeduct">คะแนนที่ตัด:</label>
+                        <input type="number" id="pointsToDeduct" readonly value="0">
+                    </div>
+                    <button type="submit" class="submit-btn">บันทึกการตัดคะแนน</button>
+                </form>
+            </div>
+
+            <div class="stats-section">
+                <h2>📊 สถิติและประวัติ</h2>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-number" id="totalRecords">0</div><div class="stat-label">ครั้งที่ตัดคะแนน</div></div>
+                    <div class="stat-card"><div class="stat-number" id="totalPoints">0</div><div class="stat-label">คะแนนรวม</div></div>
+                    <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">นักเรียนถูกตัด</div></div>
+                    <div class="stat-card"><div class="stat-number" id="avgPoints">0</div><div class="stat-label">คะแนนเฉลี่ย</div></div>
+                </div>
+                <h3 style="margin: 20px 0 10px 0;">ประวัติล่าสุด</h3>
+                <div class="records-table">
+                    <table>
+                        <thead>
+                            <tr><th>วันที่</th><th>ชื่อนักเรียน</th><th>ความผิด</th><th>คะแนน</th><th>การจัดการ</th></tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: #7f8c8d;">ยังไม่มีข้อมูล</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn manage-students-btn" onclick="openStudentModal()">👤 จัดการนักเรียน</button>
+                    <button class="action-btn export-excel-btn" onclick="exportExcel()">📊 ส่งออก Excel</button>
+                </div>
+                <h3 style="margin: 20px 0 10px 0;">🏆 10 อันดับนักเรียนคะแนนสูงสุด</h3>
+                <div class="top-students-list">
+                    <ol id="topStudentsList">
+                        <li style="justify-content: center; color: #7f8c8d;">ยังไม่มีข้อมูล</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Config Modal -->
+    <div id="configModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2>ตั้งค่าการเชื่อมต่อ Google Script</h2>
+            <p style="margin: 15px 0; color: #555;">กรุณาวาง URL ของ Google Apps Script ที่คัดลอกมาหลังจาก Deploy</p>
+            <div class="form-group">
+                <label for="scriptUrlInput">Script URL:</label>
+                <input type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/...">
+            </div>
+            <button id="saveConfigBtn" class="submit-btn">บันทึกและโหลดข้อมูล</button>
+        </div>
+    </div>
+    
+    <!-- Edit Record Modal -->
+    <div id="editRecordModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeEditRecordModal()">×</button>
+            <h2>แก้ไขประวัติการตัดคะแนน</h2>
+            <form id="editRecordForm">
+                <input type="hidden" id="editRecordIdInput">
+                <div class="form-group">
+                    <label for="editDateInput">วันที่:</label>
+                    <input type="date" id="editDateInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="editViolationNameInput">ชื่อความผิด:</label>
+                    <input type="text" id="editViolationNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPointsInput">คะแนน:</label>
+                    <input type="number" id="editPointsInput" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDescriptionInput">รายละเอียด:</label>
+                    <textarea id="editDescriptionInput" rows="3"></textarea>
+                </div>
+                <button type="submit" class="submit-btn edit">บันทึกการแก้ไข</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Student Manager Modal -->
+    <div id="studentModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeStudentModal()">×</button>
+            <h2>จัดการข้อมูลนักเรียน</h2>
+            
+            <div class="form-group">
+                <label>นำเข้าข้อมูลจาก Excel</label>
+                <p style="font-size: 0.9em; color: #555; margin-bottom: 10px;">
+                    ไฟล์ Excel ต้องมีคอลัมน์: `class`, `prefix`, `firstName`, `lastName` ในแถวแรก
+                </p>
+                <button type="button" class="action-btn import-excel-btn" onclick="document.getElementById('importExcelFile').click()">เลือกไฟล์ Excel</button>
+                <input type="file" id="importExcelFile" style="display: none;" accept=".xlsx, .xls" onchange="importFromExcel(event)">
+            </div>
+            <hr style="margin: 20px 0;">
+
+            <form id="studentForm">
+                <input type="hidden" id="studentIdInput">
+                <div class="form-group"><label for="studentClassInput">ชั้น</label><input type="text" id="studentClassInput" required></div>
+                <div class="form-group"><label for="studentPrefixInput">คำนำหน้า</label><input type="text" id="studentPrefixInput" required></div>
+                <div class="form-group"><label for="studentFirstNameInput">ชื่อ</label><input type="text" id="studentFirstNameInput" required></div>
+                <div class="form-group"><label for="studentLastNameInput">นามสกุล</label><input type="text" id="studentLastNameInput" required></div>
+                <button type="submit" class="submit-btn">บันทึกข้อมูลนักเรียน</button>
+            </form>
+            <h3 style="margin: 20px 0 10px 0;">รายชื่อนักเรียน</h3>
+            <ul id="studentManagerList"></ul>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 id="confirmModalTitle">ยืนยันการกระทำ</h3>
+            <p id="confirmModalText" style="margin: 15px 0;"></p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="confirmModalCancel" class="action-btn" style="background-color: #7f8c8d;">ยกเลิก</button>
+                <button id="confirmModalOk" class="action-btn" style="background-color: var(--danger-color);">ตกลง</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay"><div class="loader"></div></div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+    // --- GLOBAL STATE ---
+    let SCRIPT_URL = ''; // Will be loaded from localStorage
+    let appData = {
+        students: [],
+        records: []
+    };
+
+    const violationNames = {
+        'late': 'มาสาย',
+        'uniform': 'แต่งกายผิดระเบียบ',
+        'hairstyle': 'ทรงผมผิดระเบียบ',
+        'homework': 'ไม่ส่งงาน',
+        'skipping': 'หนีเรียน',
+        'phone': 'ใช้โทรศัพท์ในเวลาเรียน',
+        'fighting': 'ทะเลาะวิวาท'
+    };
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventHandlers();
+        loadAndInitializeApp();
+    });
+
+    function loadAndInitializeApp() {
+        SCRIPT_URL = localStorage.getItem('conductSystemScriptUrl');
+        if (!SCRIPT_URL) {
+            openConfigModal();
+        } else {
+            loadDataFromSheet();
+        }
+    }
+
+    function setupEventHandlers() {
+        setCurrentDate();
+        setupViolationButtons();
+        document.getElementById('deductForm').addEventListener('submit', handleDeductSubmit);
+        document.getElementById('studentForm').addEventListener('submit', handleStudentFormSubmit);
+        document.getElementById('editRecordForm').addEventListener('submit', handleEditRecordSubmit);
+        document.getElementById('configBtn').addEventListener('click', openConfigModal);
+        document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
+    }
+
+    function initializeUI() {
+        populateStudentSelect();
+        updateRecordsTable();
+        updateStats();
+        renderStudentManager();
+        updateTopStudentsList(); // Update top students list
+    }
+
+    // --- UI HELPERS ---
+    function showLoader(show) {
+        document.getElementById('loader').classList.toggle('visible', show);
+    }
+
+    function showToast(message, type = 'success', duration = 3000) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, duration);
+    }
+
+    function showConfirm(title, text, onOk) {
+        const confirmModal = document.getElementById('confirmModal');
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalText').textContent = text;
+        
+        const okBtn = document.getElementById('confirmModalOk');
+        const cancelBtn = document.getElementById('confirmModalCancel');
+        
+        confirmModal.classList.add('visible');
+
+        const close = () => confirmModal.classList.remove('visible');
+        
+        const newOkBtn = okBtn.cloneNode(true);
+        okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+        
+        newOkBtn.addEventListener('click', () => {
+             onOk();
+             close();
+        }, { once: true });
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        newCancelBtn.addEventListener('click', close, { once: true });
+    }
+    
+    // --- CONFIG MODAL ---
+    function openConfigModal() {
+        const currentUrl = localStorage.getItem('conductSystemScriptUrl');
+        if (currentUrl) {
+            document.getElementById('scriptUrlInput').value = currentUrl;
+        }
+        document.getElementById('configModal').classList.add('visible');
+    }
+
+    function saveConfig() {
+        const newUrl = document.getElementById('scriptUrlInput').value.trim();
+        if (newUrl && newUrl.startsWith('https://script.google.com/macros/s/')) {
+            localStorage.setItem('conductSystemScriptUrl', newUrl);
+            SCRIPT_URL = newUrl;
+            document.getElementById('configModal').classList.remove('visible');
+            loadDataFromSheet();
+        } else {
+            showToast('URL ไม่ถูกต้อง กรุณาตรวจสอบ', 'error');
+        }
+    }
+
+
+    // --- DATA SYNC WITH GOOGLE SHEETS ---
+    async function loadDataFromSheet() {
+        if (!SCRIPT_URL) {
+            showToast('กรุณาตั้งค่า URL ของ Google Apps Script ก่อน', 'error');
+            openConfigModal();
+            return;
+        }
+        showLoader(true);
+        try {
+            const response = await fetch(SCRIPT_URL);
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            appData = data;
+            initializeUI();
+            showToast('โหลดข้อมูลสำเร็จ', 'success');
+        } catch (error) {
+            console.error('Failed to load data:', error);
+            showToast(`โหลดข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    async function saveDataToSheet() {
+        if (!SCRIPT_URL) {
+            showToast('ไม่สามารถบันทึกได้: กรุณาตั้งค่า URL', 'error');
+            return;
+        }
+        showLoader(true);
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(appData),
+                redirect: 'follow'
+            });
+            showToast('กำลังบันทึกข้อมูล...', 'success');
+        } catch (error) {
+            console.error('Failed to save data:', error);
+            showToast(`บันทึกข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    // --- DEDUCTION FORM LOGIC ---
+    function setCurrentDate() {
+        document.getElementById('dateInput').valueAsDate = new Date();
+    }
+
+    function populateStudentSelect() {
+        const select = document.getElementById('studentSelect');
+        select.innerHTML = '<option value="">-- เลือกนักเรียน --</option>';
+        
+        if (!appData.students || appData.students.length === 0) {
+             select.innerHTML = '<option value="">-- ไม่มีข้อมูลนักเรียน --</option>';
+             return;
+        }
+
+        const studentsByClass = appData.students.reduce((acc, student) => {
+            (acc[student.class] = acc[student.class] || []).push(student);
+            return acc;
+        }, {});
+        
+        Object.keys(studentsByClass).sort().forEach(className => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = `ชั้น ${className}`;
+            studentsByClass[className].forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.prefix}${student.firstName} ${student.lastName}`;
+                option.dataset.studentName = `${student.prefix}${student.firstName} ${student.lastName}`;
+                option.dataset.studentClass = student.class;
+                optgroup.appendChild(option);
+            });
+            select.appendChild(optgroup);
+        });
+    }
+
+    function setupViolationButtons() {
+        const buttons = document.querySelectorAll('.violation-btn');
+        const otherDetailsDiv = document.getElementById('otherViolationDetails');
+        const pointsInput = document.getElementById('pointsToDeduct');
+        
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                buttons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                if (this.id === 'otherViolationBtn') {
+                    otherDetailsDiv.style.display = 'block';
+                    pointsInput.value = document.getElementById('otherViolationPointsInput').value || 0;
+                } else {
+                    otherDetailsDiv.style.display = 'none';
+                    pointsInput.value = this.dataset.points;
+                }
+            });
+        });
+
+        document.getElementById('otherViolationPointsInput').addEventListener('input', (e) => {
+            if (document.getElementById('otherViolationBtn').classList.contains('active')) {
+                pointsInput.value = e.target.value || 0;
+            }
+        });
+    }
+
+    async function handleDeductSubmit(e) {
+        e.preventDefault();
+        
+        const studentSelect = document.getElementById('studentSelect');
+        const selectedOption = studentSelect.selectedOptions[0];
+        if (!selectedOption || !selectedOption.value) {
+            showToast('กรุณาเลือกนักเรียน', 'error');
+            return;
+        }
+        
+        const activeBtn = document.querySelector('.violation-btn.active');
+        if (!activeBtn) {
+            showToast('กรุณาเลือกประเภทความผิด', 'error');
+            return;
+        }
+        
+        let violationKey = activeBtn.dataset.violation;
+        let violationText = violationNames[violationKey];
+        let points = parseInt(document.getElementById('pointsToDeduct').value);
+
+        if (activeBtn.id === 'otherViolationBtn') {
+            violationKey = 'other';
+            violationText = document.getElementById('otherViolationNameInput').value.trim();
+            points = parseInt(document.getElementById('otherViolationPointsInput').value);
+
+            if (!violationText || isNaN(points) || points <= 0) {
+                showToast('กรุณาระบุชื่อความผิดและคะแนนให้ถูกต้อง', 'error');
+                return;
+            }
+        }
+
+        const record = {
+            id: `REC${Date.now()}`,
+            date: document.getElementById('dateInput').value,
+            studentId: selectedOption.value,
+            studentName: selectedOption.dataset.studentName,
+            studentClass: selectedOption.dataset.studentClass,
+            violation: violationKey,
+            violationName: violationText,
+            description: document.getElementById('description').value,
+            points: points
+        };
+        
+        appData.records.push(record);
+        
+        initializeUI();
+        
+        await saveDataToSheet();
+        
+        document.getElementById('deductForm').reset();
+        setCurrentDate();
+        document.querySelectorAll('.violation-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('pointsToDeduct').value = '0';
+        document.getElementById('otherViolationDetails').style.display = 'none';
+        showToast('บันทึกการตัดคะแนนเรียบร้อย', 'success');
+    }
+
+    // --- STATS & RECORDS TABLE ---
+    function updateRecordsTable() {
+        const tbody = document.getElementById('recordsTableBody');
+        if (appData.records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #7f8c8d;">ยังไม่มีข้อมูล</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = appData.records
+            .slice()
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map(record => `
+                <tr>
+                    <td>${new Date(record.date).toLocaleDateString('th-TH')}</td>
+                    <td>${record.studentName}</td>
+                    <td>${record.violationName}</td>
+                    <td>${record.points}</td>
+                    <td class="record-actions">
+                         <button class="record-action-btn" title="แก้ไข" onclick="startEditRecord('${record.id}')">✏️</button>
+                         <button class="record-action-btn" title="ลบ" onclick="deleteRecord('${record.id}')">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    function updateStats() {
+        const totalRecords = appData.records.length;
+        const totalPoints = appData.records.reduce((sum, r) => sum + (parseInt(r.points) || 0), 0);
+        const uniqueStudents = new Set(appData.records.map(r => r.studentId)).size;
+        const avgPoints = totalRecords > 0 ? (totalPoints / totalRecords).toFixed(1) : 0;
+        
+        document.getElementById('totalRecords').textContent = totalRecords;
+        document.getElementById('totalPoints').textContent = totalPoints;
+        document.getElementById('totalStudents').textContent = uniqueStudents;
+        document.getElementById('avgPoints').textContent = avgPoints;
+    }
+
+    function updateTopStudentsList() {
+        const list = document.getElementById('topStudentsList');
+        if (!appData.records || appData.records.length === 0) {
+            list.innerHTML = '<li style="justify-content: center; color: #7f8c8d;">ยังไม่มีข้อมูลการตัดคะแนน</li>';
+            return;
+        }
+
+        const pointsByStudent = appData.records.reduce((acc, record) => {
+            const studentId = record.studentId;
+            const points = parseInt(record.points) || 0;
+            if (!acc[studentId]) {
+                acc[studentId] = {
+                    id: studentId,
+                    name: record.studentName,
+                    totalPoints: 0
+                };
+            }
+            acc[studentId].totalPoints += points;
+            return acc;
+        }, {});
+
+        const sortedStudents = Object.values(pointsByStudent)
+            .sort((a, b) => b.totalPoints - a.totalPoints)
+            .slice(0, 10);
+
+        if (sortedStudents.length === 0) {
+            list.innerHTML = '<li style="justify-content: center; color: #7f8c8d;">ยังไม่มีข้อมูลการตัดคะแนน</li>';
+            return;
+        }
+
+        list.innerHTML = sortedStudents.map((student, index) => `
+            <li>
+                <span class="student-rank">${index + 1}.</span>
+                <span class="student-name">${student.name}</span>
+                <span class="student-points">${student.totalPoints} คะแนน</span>
+            </li>
+        `).join('');
+    }
+
+
+    // --- RECORD EDIT/DELETE ---
+    function startEditRecord(recordId) {
+        const record = appData.records.find(r => r.id === recordId);
+        if (record) {
+            document.getElementById('editRecordIdInput').value = record.id;
+            document.getElementById('editDateInput').value = record.date;
+            document.getElementById('editViolationNameInput').value = record.violationName;
+            document.getElementById('editPointsInput').value = record.points;
+            document.getElementById('editDescriptionInput').value = record.description;
+            document.getElementById('editRecordModal').classList.add('visible');
+        }
+    }
+
+    function closeEditRecordModal() {
+        document.getElementById('editRecordModal').classList.remove('visible');
+    }
+
+    async function handleEditRecordSubmit(e) {
+        e.preventDefault();
+        const recordId = document.getElementById('editRecordIdInput').value;
+        const recordIndex = appData.records.findIndex(r => r.id === recordId);
+
+        if (recordIndex > -1) {
+            appData.records[recordIndex].date = document.getElementById('editDateInput').value;
+            appData.records[recordIndex].violationName = document.getElementById('editViolationNameInput').value.trim();
+            appData.records[recordIndex].points = parseInt(document.getElementById('editPointsInput').value);
+            appData.records[recordIndex].description = document.getElementById('editDescriptionInput').value.trim();
+            
+            closeEditRecordModal();
+            initializeUI();
+            await saveDataToSheet();
+            showToast('แก้ไขข้อมูลสำเร็จ', 'success');
+        } else {
+            showToast('ไม่พบข้อมูลที่จะแก้ไข', 'error');
+        }
+    }
+
+    function deleteRecord(recordId) {
+        const record = appData.records.find(r => r.id === recordId);
+        if (!record) return;
+
+        showConfirm('ยืนยันการลบ', `คุณต้องการลบรายการ "${record.violationName}" ของ ${record.studentName} ใช่หรือไม่?`, async () => {
+            appData.records = appData.records.filter(r => r.id !== recordId);
+            initializeUI();
+            await saveDataToSheet();
+            showToast('ลบรายการสำเร็จ', 'success');
+        });
+    }
+
+
+    // --- STUDENT MANAGEMENT ---
+    function openStudentModal() { document.getElementById('studentModal').classList.add('visible'); }
+    function closeStudentModal() { 
+        document.getElementById('studentModal').classList.remove('visible'); 
+        document.getElementById('studentForm').reset();
+        document.getElementById('studentIdInput').value = '';
+    }
+
+    function renderStudentManager() {
+        const list = document.getElementById('studentManagerList');
+        list.innerHTML = '';
+        if (!appData.students || appData.students.length === 0) {
+            list.innerHTML = '<li>ไม่มีข้อมูลนักเรียน</li>';
+            return;
+        }
+        appData.students.forEach(s => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${s.prefix}${s.firstName} ${s.lastName} (ชั้น ${s.class})</span>
+                <div class="student-manager-actions">
+                    <button class="student-edit-btn" onclick="startEditStudent('${s.id}')">แก้ไข</button>
+                    <button class="student-delete-btn" onclick="deleteStudent('${s.id}')">ลบ</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+    
+    async function handleStudentFormSubmit(e) {
+        e.preventDefault();
+        const studentId = document.getElementById('studentIdInput').value;
+        const student = {
+            id: studentId || `ST${Date.now()}`,
+            class: document.getElementById('studentClassInput').value.trim(),
+            prefix: document.getElementById('studentPrefixInput').value.trim(),
+            firstName: document.getElementById('studentFirstNameInput').value.trim(),
+            lastName: document.getElementById('studentLastNameInput').value.trim()
+        };
+
+        if (!student.class || !student.prefix || !student.firstName || !student.lastName) {
+            showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+            return;
+        }
+
+        if (studentId) { // Editing existing student
+            const index = appData.students.findIndex(s => s.id === studentId);
+            if (index > -1) {
+                appData.students[index] = student;
+            }
+        } else { // Adding new student
+            appData.students.push(student);
+        }
+        
+        initializeUI();
+        closeStudentModal();
+        showToast('บันทึกข้อมูลนักเรียนสำเร็จ');
+
+        await saveDataToSheet(); 
+    }
+
+    function startEditStudent(studentId) {
+        const student = appData.students.find(s => s.id === studentId);
+        if (student) {
+            document.getElementById('studentIdInput').value = student.id;
+            document.getElementById('studentClassInput').value = student.class;
+            document.getElementById('studentPrefixInput').value = student.prefix;
+            document.getElementById('studentFirstNameInput').value = student.firstName;
+            document.getElementById('studentLastNameInput').value = student.lastName;
+            openStudentModal();
+        }
+    }
+
+    async function deleteStudent(studentId) {
+        const student = appData.students.find(s => s.id === studentId);
+        if (!student) return;
+
+        showConfirm('ยืนยันการลบ', `คุณต้องการลบข้อมูลของ ${student.prefix}${student.firstName} หรือไม่? การกระทำนี้จะลบประวัติการตัดคะแนนของนักเรียนคนนี้ด้วย`, async () => {
+            appData.students = appData.students.filter(s => s.id !== studentId);
+            appData.records = appData.records.filter(r => r.studentId !== studentId);
+            
+            initializeUI();
+            showToast('ลบข้อมูลนักเรียนสำเร็จ');
+            
+            await saveDataToSheet(); 
+        });
+    }
+
+    // --- DATA IMPORT/EXPORT ---
+    async function importFromExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        showLoader(true);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                const newStudents = [];
+                json.forEach(row => {
+                    const classCol = Object.keys(row).find(k => k.trim().toLowerCase() === 'class');
+                    const prefixCol = Object.keys(row).find(k => k.trim().toLowerCase() === 'prefix');
+                    const firstNameCol = Object.keys(row).find(k => k.trim().toLowerCase() === 'firstname');
+                    const lastNameCol = Object.keys(row).find(k => k.trim().toLowerCase() === 'lastname');
+
+                    if (classCol && prefixCol && firstNameCol && lastNameCol) {
+                        newStudents.push({
+                            id: `ST${Date.now()}${newStudents.length}`,
+                            class: String(row[classCol]).trim(),
+                            prefix: String(row[prefixCol]).trim(),
+                            firstName: String(row[firstNameCol]).trim(),
+                            lastName: String(row[lastNameCol]).trim()
+                        });
+                    }
+                });
+
+                if (newStudents.length > 0) {
+                    appData.students.push(...newStudents);
+                    
+                    initializeUI();
+                    closeStudentModal();
+                    showToast(`นำเข้านักเรียน ${newStudents.length} คนสำเร็จ!`, 'success');
+                    
+                    await saveDataToSheet(); 
+                } else {
+                    showToast('ไม่พบข้อมูลนักเรียนที่ถูกต้องในไฟล์ Excel หรือคอลัมน์ไม่ตรงกัน (class, prefix, firstName, lastName)', 'error');
+                }
+            } catch (error) {
+                console.error("Error importing from Excel:", error);
+                showToast('เกิดข้อผิดพลาดในการอ่านไฟล์ Excel', 'error');
+            } finally {
+                showLoader(false);
+                event.target.value = ''; // Reset file input
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function exportExcel() {
+        if (appData.records.length === 0) {
+            showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
+            return;
+        }
+        
+        const exportData = appData.records.map(r => ({
+            'วันที่': new Date(r.date).toLocaleDateString('th-TH'), 'ชั้น': r.studentClass,
+            'ชื่อ-นามสกุล': r.studentName, 'ความผิด': r.violationName,
+            'รายละเอียด': r.description || '-', 'คะแนนที่ตัด': r.points
+        }));
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        XLSX.utils.book_append_sheet(wb, ws, 'การตัดคะแนน');
+        
+        XLSX.writeFile(wb, `การตัดคะแนน_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+    </script>
+</body>
+</html>
